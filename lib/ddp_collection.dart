@@ -17,11 +17,12 @@ Tuple2<String, Map<String, dynamic>> _parseUpdate(Map<String, dynamic> update) {
           return Tuple2(id, updates);
         }
       }
-     if (update.containsKey('cleared')) {
+      if (update.containsKey('cleared')) {
         final updates = update['cleared'];
-        if (updates is Map) {
-          return Tuple2(id, updates);
-        }
+        final map = Map.fromIterable(updates,
+          key: (item) => item.toString(),
+          value: (item) => null);
+        return Tuple2(id, map);
       }
       return Tuple2(id, null);
     }
