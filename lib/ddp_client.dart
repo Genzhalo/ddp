@@ -412,7 +412,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
           runningSub.error = ArgumentError(
               'Subscription returned a nosub error'); // TODO error type.
           runningSub.done();
-          this._subs.remove(id);
+          // this._subs.remove(id);
         }
 
         final runningUnSub = this._unsubs[id];
@@ -428,7 +428,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
         subs.forEach((sub) {
           if (this._subs.containsKey(sub)) {
             this._subs[sub].done();
-            this._subs.remove(sub);
+            // this._subs.remove(sub);
           }
         });
       }
