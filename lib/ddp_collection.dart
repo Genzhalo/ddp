@@ -37,11 +37,11 @@ abstract class Collection {
 
   void addUpdateListener(UpdateListener listener);
 
-  void _added(Map<String, dynamic> msg);
+  void added(Map<String, dynamic> msg);
 
-  void _changed(Map<String, dynamic> msg);
+  void changed(Map<String, dynamic> msg);
 
-  void _removed(Map<String, dynamic> msg);
+  void removed(Map<String, dynamic> msg);
 
   void _addedBefore(Map<String, dynamic> msg);
 
@@ -50,6 +50,8 @@ abstract class Collection {
   void _init();
 
   void _reset();
+
+  void removeAll()
 
   factory Collection.mock() => _MockCache();
 
@@ -70,7 +72,7 @@ class KeyCache implements Collection {
   }
 
   @override
-  void _added(Map<String, dynamic> msg) {
+  void added(Map<String, dynamic> msg) {
     final pair = _parseUpdate(msg);
     if (pair.item2 != null) {
       this._items[pair.item1] = pair.item2;
@@ -82,7 +84,7 @@ class KeyCache implements Collection {
   void _addedBefore(Map<String, dynamic> msg) {}
 
   @override
-  void _changed(Map<String, dynamic> msg) {
+  void changed(Map<String, dynamic> msg) {
     final pair = _parseUpdate(msg);
     if (pair.item2 != null) {
       if (this._items.containsKey(pair.item1)) {
@@ -101,7 +103,7 @@ class KeyCache implements Collection {
   void _movedBefore(Map<String, dynamic> msg) {}
 
   @override
-  void _removed(Map<String, dynamic> msg) {
+  void removed(Map<String, dynamic> msg) {
     final pair = _parseUpdate(msg);
     if (pair.item1.isNotEmpty) {
       this._items.remove(pair.item1);
@@ -112,6 +114,11 @@ class KeyCache implements Collection {
   @override
   void _reset() {
     this._notify('reset', '', null);
+  }
+
+  @override
+  void removeAll(){
+    _items.clear();
   }
 
   @override
@@ -127,13 +134,13 @@ class KeyCache implements Collection {
 
 class _MockCache implements Collection {
   @override
-  void _added(Map<String, dynamic> msg) {}
+  void added(Map<String, dynamic> msg) {}
 
   @override
   void _addedBefore(Map<String, dynamic> msg) {}
 
   @override
-  void _changed(Map<String, dynamic> msg) {}
+  void changed(Map<String, dynamic> msg) {}
 
   @override
   void _init() {}
@@ -142,7 +149,7 @@ class _MockCache implements Collection {
   void _movedBefore(Map<String, dynamic> msg) {}
 
   @override
-  void _removed(Map<String, dynamic> msg) {}
+  void removed(Map<String, dynamic> msg) {}
 
   @override
   void _reset() {}

@@ -53,6 +53,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
   Map<String, Call> _calls;
   Map<String, Call> _subs;
   Map<String, Call> _unsubs;
+  Call _login;
 
   Map<String, Collection> _collections;
   ConnectStatus _connectionStatus;
@@ -129,6 +130,16 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     this._statusListeners.forEach((l) => l(status));
   }
 
+  ConnectStatus get connectStatus  => _connectionStatus
+
+
+  void _resetCalls(){
+    this._calls.values.forEach((call) => this.send(
+      Message.method(call.id, call.serviceMethod, call.args).toJson()));
+    this._subs.values.forEach((call) => this.send(
+      Message.sub(call.id, call.serviceMethod, call.args).toJson()));
+  }
+
   void connect() {
     this._status(ConnectStatus.dialing);
     WebSocket.connect(this._url).then((connection) {
@@ -151,10 +162,12 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     this._status(ConnectStatus.dialing);
     WebSocket.connect(this._url).then((connection) {
       this._start(connection, Message.reconnect(this._session));
-      this._calls.values.forEach((call) => this.send(
-          Message.method(call.id, call.serviceMethod, call.args).toJson()));
-      this._subs.values.forEach((call) => this
-          .send(Message.sub(call.id, call.serviceMethod, call.args).toJson()));
+      if (_login != null) {
+        _login.onceDone(_resetCalls)
+        this.send(Message.method(_login.id, _login.serviceMethod, _login.args).toJson());
+      } else {
+        _resetCalls();
+      }
     }).catchError((error) {
       this.close();
       this._reconnectLater();
@@ -177,7 +190,6 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     }
     call.onceDone(done);
     this._subs[call.id] = call;
-
     this.send(Message.sub(call.id, subName, args).toJson());
     return call;
   }
@@ -197,6 +209,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
       done = (c) {};
     }
     call.onceDone(done);
+    this._subs.remove[call.id]
     this._unsubs[call.id] = call;
     this.send(Message.unSub(call.id).toJson());
     return call;
@@ -220,6 +233,9 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     if (done == null) {
       done = (c) {};
     }
+    if (serviceMethod == "login") {
+      _login = call;
+    }
     call.onceDone(done);
     this._calls[call.id] = call;
     this.send(Message.method(call.id, serviceMethod, args).toJson());
@@ -233,7 +249,9 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
   }
 
   void send(dynamic msg) {
-    this._writeStats.add(msg);
+    if (_connectionStatus == ConnectStatus.connect || _connectionStatus = ConnectStatus.connecting){
+      this._writeStats.add(msg);
+    }
   }
 
   void close() {
@@ -416,11 +434,11 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
       }
     };
     this._messageHandlers['added'] =
-        (msg) => this._collectionBy(msg)._added(msg);
+        (msg) => this._collectionBy(msg).added(msg);
     this._messageHandlers['changed'] =
-        (msg) => this._collectionBy(msg)._changed(msg);
+        (msg) => this._collectionBy(msg).changed(msg);
     this._messageHandlers['removed'] =
-        (msg) => this._collectionBy(msg)._removed(msg);
+        (msg) => this._collectionBy(msg).removed(msg);
     this._messageHandlers['addedBefore'] =
         (msg) => this._collectionBy(msg)._addedBefore(msg);
     this._messageHandlers['movedBefore'] =
@@ -463,7 +481,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
       } else {
         this._log('Server sent message without `msg` field ${message}');
       }
-    }, onDone: (){ this._status(ConnectStatus.disconnected); });
+    }, onDone: (){ _reconnectLater(); });
   }
 
   Collection _collectionBy(Map<String, dynamic> msg) {

@@ -47,4 +47,10 @@ class Call {
     _handlers.forEach((handler) => handler(this));
     _handlers.clear();
   }
+
+  void dispose(){
+    owner._calls.remove(this.id);
+    owner._subs.remove(this.id);
+    _handlers.clear();
+  }
 }
