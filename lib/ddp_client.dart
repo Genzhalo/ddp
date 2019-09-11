@@ -446,7 +446,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     this._messageHandlers['result'] = (msg) {
       if (msg.containsKey('id')) {
         final id = msg['id'];
-        print(">>>>msg>>>>>>>>>>>${msg}")
+        print(">>>>msg>>>>>>>>>>>${msg}");
         final call = this._calls[id];
         print(">>>>call>>>>>>>>>>>${call.serviceMethod}");
         if (call != null) {
