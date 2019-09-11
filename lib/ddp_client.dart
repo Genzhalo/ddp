@@ -130,7 +130,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     this._statusListeners.forEach((l) => l(status));
   }
 
-  ConnectStatus get connectStatus  => _connectionStatus
+  ConnectStatus get connectStatus  => _connectionStatus;
 
 
   void _resetCalls(){
@@ -209,7 +209,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
       done = (c) {};
     }
     call.onceDone(done);
-    this._subs.remove[call.id]
+    this._subs.remove[call.id];
     this._unsubs[call.id] = call;
     this.send(Message.unSub(call.id).toJson());
     return call;

@@ -51,7 +51,7 @@ abstract class Collection {
 
   void _reset();
 
-  void removeAll()
+  void removeAll();
 
   factory Collection.mock() => _MockCache();
 
@@ -153,6 +153,9 @@ class _MockCache implements Collection {
 
   @override
   void _reset() {}
+
+  @override
+  void removeAll(){}
 
   @override
   void addUpdateListener(UpdateListener listener) {}
