@@ -163,7 +163,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     WebSocket.connect(this._url).then((connection) {
       this._start(connection, Message.reconnect(this._session));
       if (_login != null) {
-        _login.onceDone((Call c){ _resetCalls() });
+        _login.onceDone((Call c){ _resetCalls();});
         this.send(Message.method(_login.id, _login.serviceMethod, _login.args).toJson());
       } else {
         _resetCalls();
