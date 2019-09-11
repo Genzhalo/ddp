@@ -447,15 +447,17 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
       if (msg.containsKey('id')) {
         final id = msg['id'];
         final call = this._calls[id];
-        this._calls.remove(id);
-        if (msg.containsKey('error')) {
-          final e = msg['error'];
-          call.error = ArgumentError(json.encode(e)); // TODO Error Type
-          call.reply = e;
-        } else {
-          call.reply = msg['result'];
+        if (call != null) {
+          this._calls.remove(id);
+          if (msg.containsKey('error')) {
+            final e = msg['error'];
+            call.error = ArgumentError(json.encode(e)); // TODO Error Type
+            call.reply = e;
+          } else {
+            call.reply = msg['result'];
+          }
+          call.done();
         }
-        call.done();
       }
     };
     this._messageHandlers['updated'] = (msg) {};
