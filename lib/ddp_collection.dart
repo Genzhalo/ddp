@@ -91,7 +91,7 @@ class KeyCache implements Collection {
         final item = this._items[pair.item1];
         pair.item2.forEach((key, value) => item[key] = value);
         this._items[pair.item1] = item;
-        this._notify('update', pair.item1, item);
+        this._notify('update', pair.item1, pair.item2);
       }
     }
   }
