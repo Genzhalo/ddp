@@ -237,6 +237,11 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     if (serviceMethod == "login") {
       _login = call;
     }
+    if (serviceMethod == "logout") {
+      for (var c in _subs.values) {
+        send(Message.unSub(c.id).toJson());
+      }
+    }
     call.onceDone(done);
     this._calls[call.id] = call;
     this.send(Message.method(call.id, serviceMethod, args).toJson());
