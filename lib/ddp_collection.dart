@@ -11,21 +11,20 @@ Tuple2<String, Map<String, dynamic>> _parseUpdate(Map<String, dynamic> update) {
   if (update.containsKey('id')) {
     final id = update['id'];
     if (id.runtimeType == String) {
+      var updates = Map<String, dynamic>();
       if (update.containsKey('fields')) {
-        final updates = update['fields'];
-        if (updates is Map) {
-          return Tuple2(id, updates);
+        if (update['fields'] is Map) {
+          updates.addAll(update['fields']);
         }
       }
       if (update.containsKey('cleared')) {
-        final updates = update['cleared'];
-        final map = Map.fromIterable(updates,
-          key: (item) => item.toString(),
-          value: (item) => null);
-        return Tuple2(id, map);
+        for (var item in update["cleared"]) {
+          updates[item] = null;
+        }
       }
-      return Tuple2(id, null);
+      return Tuple2(id, updates);
     }
+    return Tuple2(id, null);
   }
   return Tuple2('', null);
 }
