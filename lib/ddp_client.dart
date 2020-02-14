@@ -1,5 +1,6 @@
 part of ddp;
 
+
 enum ConnectStatus {
   disconnected,
   dialing,
@@ -456,7 +457,8 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
         if (call != null) {
           if (msg.containsKey('error')) {
             final e = msg['error'];
-            call.error = ArgumentError(json.encode(e)); // TODO Error Type
+            final message = e["reason"] ?? e["message"] ?? json.encode(e);
+            call.error = ArgumentError(message); // TODO Error Type
             call.reply = e;
           } else {
             call.reply = msg['result'];
@@ -488,7 +490,10 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
       } else {
         this._log('Server sent message without `msg` field ${message}');
       }
-    }, onDone: (){ _reconnectLater(); });
+    }, onDone: (){
+      if (Platform.isAndroid)
+        _reconnectLater(); 
+    });
   }
 
   Collection _collectionBy(Map<String, dynamic> msg) {
