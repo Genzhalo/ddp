@@ -342,7 +342,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
   }
 
   void _reconnectLater() {
-    this.close();
+    // this.close();
     if (this._reconnectTimer == null) {
       this._reconnectTimer = Timer(this.reconnectInterval, this.reconnect);
     }
@@ -351,7 +351,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
   void ping() {
     this.pingPong(this._idManager.next(), this.heartbeatTimeout, (err) {
       if (err != null) {
-        this._reconnectLater();
+        // this._reconnectLater();
       }
     });
   }
@@ -491,8 +491,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
         this._log('Server sent message without `msg` field ${message}');
       }
     }, onDone: (){
-      if (Platform.isAndroid)
-        _reconnectLater(); 
+      _reconnectLater(); 
     });
   }
 
