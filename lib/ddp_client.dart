@@ -54,7 +54,6 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
   Map<String, Call> _calls;
   Map<String, Call> _subs;
   Map<String, Call> _unsubs;
-  Call _login;
 
   Map<String, Collection> _collections;
   ConnectStatus _connectionStatus;
@@ -134,13 +133,6 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
   ConnectStatus get connectStatus  => _connectionStatus;
 
 
-  void _resetCalls(){
-    this._calls.values.forEach((call) => this.send(
-      Message.method(call.id, call.serviceMethod, call.args).toJson()));
-    this._subs.values.forEach((call) => this.send(
-      Message.sub(call.id, call.serviceMethod, call.args).toJson()));
-  }
-
   void connect() {
     this._status(ConnectStatus.dialing);
     WebSocket.connect(this._url).then((connection) {
@@ -157,23 +149,9 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
       this._reconnectTimer.cancel();
       this._reconnectTimer = null;
     }
-
     this.close();
     this._reconnects++;
-    this._status(ConnectStatus.dialing);
-    WebSocket.connect(this._url).then((connection) {
-      this._start(connection, Message.reconnect(this._session));
-      if (_login != null) {
-        call( _login.serviceMethod, _login.args).whenComplete((){
-          _resetCalls();
-        });
-      } else {
-        _resetCalls();
-      }
-    }).catchError((error) {
-      this.close();
-      this._reconnectLater();
-    });
+    this.connect();
   }
 
   Call subscribe(String subName, OnCallDone done, List<dynamic> args) {
@@ -234,14 +212,6 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
       ..owner = this;
     if (done == null) {
       done = (c) {};
-    }
-    if (serviceMethod == "login") {
-      _login = call;
-    }
-    if (serviceMethod == "logout") {
-      for (var c in _subs.values) {
-        send(Message.unSub(c.id).toJson());
-      }
     }
     call.onceDone(done);
     this._calls[call.id] = call;
@@ -419,7 +389,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
           runningSub.error = ArgumentError(
               'Subscription returned a nosub error'); // TODO error type.
           runningSub.done();
-          // this._subs.remove(id);
+          this._subs.remove(id);
         }
 
         final runningUnSub = this._unsubs[id];
@@ -435,7 +405,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
         subs.forEach((sub) {
           if (this._subs.containsKey(sub)) {
             this._subs[sub].done();
-            // this._subs.remove(sub);
+            this._subs.remove(sub);
           }
         });
       }
