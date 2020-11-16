@@ -384,10 +384,9 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
         final id = msg['id'] as String;
         final runningSub = this._subs[id];
         if (runningSub != null) {
-          print(runningSub);
-          this._log('Subscription returned a nosub error $msg');
-          runningSub.error = ArgumentError(
-              'Subscription returned a nosub error'); // TODO error type.
+          final e = msg['error'];
+          final message = e["error"] ?? e["message"] ?? e["reason"] ?? 'Subscription returned a nosub error';
+          runningSub.error = ArgumentError(message);
           runningSub.done();
           this._subs.remove(id);
         }
