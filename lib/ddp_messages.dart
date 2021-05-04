@@ -2,21 +2,21 @@ part of ddp;
 
 class Message {
   String type;
-  String id;
+  String? id;
 
   Message(this.id, this.type);
 
   factory Message.ping(String id) => _Ping(id);
 
-  factory Message.pong(String id) => _Pong(id);
+  factory Message.pong(String? id) => _Pong(id);
 
-  factory Message.method(String id, String serviceMethod, List<dynamic> args) =>
+  factory Message.method(String? id, String serviceMethod, List<dynamic> args) =>
       _Method(id, serviceMethod, args);
 
-  factory Message.sub(String id, String subName, List<dynamic> args) =>
+  factory Message.sub(String? id, String subName, List<dynamic> args) =>
       _Sub(id, subName, args);
 
-  factory Message.unSub(String id) => _UnSub(id);
+  factory Message.unSub(String? id) => _UnSub(id);
 
   factory Message.connect() => _Connect('1', ['1'], null);
 
@@ -41,14 +41,14 @@ class _Ping extends Message {
 }
 
 class _Pong extends Message {
-  _Pong(String id) : super(id, 'pong');
+  _Pong(String? id) : super(id, 'pong');
 }
 
 class _Method extends Message {
   String serviceMethod;
   List<dynamic> args;
 
-  _Method(String id, this.serviceMethod, this.args) : super(id, 'method');
+  _Method(String? id, this.serviceMethod, this.args) : super(id, 'method');
 
   @override
   Map<String, dynamic> _toMap() {
@@ -63,7 +63,7 @@ class _Sub extends Message {
   String subName;
   List<dynamic> args;
 
-  _Sub(String id, this.subName, this.args) : super(id, 'sub');
+  _Sub(String? id, this.subName, this.args) : super(id, 'sub');
 
   @override
   Map<String, dynamic> _toMap() {
@@ -75,13 +75,13 @@ class _Sub extends Message {
 }
 
 class _UnSub extends Message {
-  _UnSub(String id) : super(id, 'unsub');
+  _UnSub(String? id) : super(id, 'unsub');
 }
 
 class _Connect extends Message {
   String version;
   List<String> support;
-  String session;
+  String? session;
 
   _Connect(this.version, this.support, this.session) : super(null, 'connect');
 

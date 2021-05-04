@@ -22,20 +22,20 @@ class _IdManager {
 }
 
 class _PingTracker {
-  Function(Error) _handler;
-  Duration _timeout;
-  Timer _timer;
+  late Function(Error?) _handler;
+  Duration? _timeout;
+  late Timer _timer;
 }
 
 typedef void OnCallDone(Call call);
 
 class Call {
-  String id;
-  String serviceMethod;
+  String? id;
+  String? serviceMethod;
   dynamic args;
   dynamic reply;
-  Error error;
-  DdpClient owner;
+  Error? error;
+  late DdpClient owner;
   List<OnCallDone> _handlers = [];
 
   void onceDone(OnCallDone fn) {

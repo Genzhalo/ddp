@@ -6,18 +6,18 @@ enum LoggingDataType {
 }
 
 class ReaderProxy extends Stream<dynamic> {
-  Stream<dynamic> _reader;
+  Stream<dynamic>? _reader;
 
   ReaderProxy(this._reader);
 
   @override
   StreamSubscription listen(
-    void Function(dynamic event) onData, {
-    Function onError,
-    void Function() onDone,
-    bool cancelOnError,
+    void Function(dynamic event)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
   }) {
-    return this._reader.listen(
+    return this._reader!.listen(
           onData,
           onError: onError,
           onDone: onDone,
@@ -25,42 +25,42 @@ class ReaderProxy extends Stream<dynamic> {
         );
   }
 
-  void setReader(Stream<dynamic> reader) {
+  void setReader(Stream<dynamic>? reader) {
     this._reader = reader;
   }
 }
 
 class WriterProxy implements StreamSink<dynamic> {
-  StreamSink<dynamic> _writer;
+  StreamSink<dynamic>? _writer;
 
   WriterProxy(this._writer);
 
   @override
   void add(event) {
-    this._writer.add(event);
+    this._writer!.add(event);
   }
 
   @override
-  void addError(Object error, [StackTrace stackTrace]) {
-    this._writer.addError(error, stackTrace);
+  void addError(Object error, [StackTrace? stackTrace]) {
+    this._writer!.addError(error, stackTrace);
   }
 
   @override
   Future addStream(Stream stream) {
-    return this._writer.addStream(stream);
+    return this._writer!.addStream(stream);
   }
 
   @override
   Future close() {
-    return this._writer.close();
+    return this._writer!.close();
   }
 
   @override
   Future get done {
-    return this._writer.done;
+    return this._writer!.done;
   }
 
-  void setWriter(StreamSink<dynamic> writer) {
+  void setWriter(StreamSink<dynamic>? writer) {
     this._writer = writer;
   }
 }
@@ -68,16 +68,16 @@ class WriterProxy implements StreamSink<dynamic> {
 typedef void _Logger(Object object);
 
 class LoggerMixin {
-  bool active;
-  int truncate;
-  LoggingDataType _dtype;
-  _Logger _logger;
+  bool? active;
+  int? truncate;
+  LoggingDataType? _dtype;
+  late _Logger _logger;
 
-  log(dynamic p, int n) {
-    if (this.active) {
-      int limit = n;
+  log(dynamic p, int? n) {
+    if (this.active!) {
+      int? limit = n;
       bool trancated = false;
-      if (this.truncate > 0 && this.truncate < limit) {
+      if (this.truncate! > 0 && this.truncate! < limit!) {
         limit = this.truncate;
         trancated = true;
       }
@@ -85,13 +85,13 @@ class LoggerMixin {
         case LoggingDataType.DataText:
           if (trancated) {
             if (p is List) {
-              this._logger('[${n}] ${utf8.decode(p.sublist(0, limit))}...');
+              this._logger('[${n}] ${utf8.decode(p.sublist(0, limit) as List<int>)}...');
             } else if (p.runtimeType == String) {
               this._logger('[${n}] ${p.substring(0, limit)}...');
             }
           } else {
             if (p is List) {
-              this._logger('[${n}] ${utf8.decode(p.sublist(0, limit))}');
+              this._logger('[${n}] ${utf8.decode(p.sublist(0, limit) as List<int>)}');
             } else if (p.runtimeType == String) {
               this._logger('[${n}] ${p.substring(0, limit)}');
             }
@@ -107,9 +107,9 @@ class LoggerMixin {
 }
 
 class ReaderLogger extends ReaderProxy with LoggerMixin {
-  ReaderLogger(Stream reader) : super(reader);
+  ReaderLogger(Stream? reader) : super(reader);
 
-  factory ReaderLogger.text(Stream reader) => ReaderLogger(reader)
+  factory ReaderLogger.text(Stream? reader) => ReaderLogger(reader)
     .._logger = ((Object obj) => print('<- $obj'))
     ..active = true
     .._dtype = LoggingDataType.DataText
@@ -117,15 +117,15 @@ class ReaderLogger extends ReaderProxy with LoggerMixin {
 
   @override
   StreamSubscription listen(
-    void Function(dynamic event) onData, {
-    Function onError,
-    void Function() onDone,
-    bool cancelOnError,
+    void Function(dynamic event)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
   }) {
     return super.listen(
       (event) {
         this.log(event, event.length);
-        onData(event);
+        onData!(event);
       },
       onError: onError,
       onDone: onDone,
@@ -135,9 +135,9 @@ class ReaderLogger extends ReaderProxy with LoggerMixin {
 }
 
 class WriterLogger extends WriterProxy with LoggerMixin {
-  WriterLogger(StreamSink writer) : super(writer);
+  WriterLogger(StreamSink? writer) : super(writer);
 
-  factory WriterLogger.text(StreamSink writer) => WriterLogger(writer)
+  factory WriterLogger.text(StreamSink? writer) => WriterLogger(writer)
     .._logger = ((Object obj) => print('-> $obj'))
     ..active = true
     .._dtype = LoggingDataType.DataText
@@ -151,32 +151,32 @@ class WriterLogger extends WriterProxy with LoggerMixin {
 }
 
 class Stats {
-  int bytes;
-  int ops;
-  int errors;
-  Duration runtime;
+  int? bytes;
+  int? ops;
+  int? errors;
+  Duration? runtime;
 }
 
 class ClientStats {
-  Stats reads;
-  Stats totalReads;
-  Stats writes;
-  Stats totalWrites;
-  int reconnects;
-  int pingsSent;
-  int pingsRecv;
+  Stats? reads;
+  Stats? totalReads;
+  Stats? writes;
+  Stats? totalWrites;
+  int? reconnects;
+  int? pingsSent;
+  int? pingsRecv;
 }
 
 class CollectionStats {
-  String name;
-  int count;
+  String? name;
+  int? count;
 }
 
 class StatsTrackerMixin {
-  int _bytes;
-  int _ops;
-  int _errors;
-  DateTime _start;
+  int _bytes = 0;
+  int _ops = 0;
+  int? _errors;
+  late DateTime _start;
 
   int op(int n) {
     this._ops++;
@@ -208,7 +208,7 @@ class StatsTrackerMixin {
 }
 
 class ReaderStats extends ReaderProxy with StatsTrackerMixin {
-  ReaderStats(Stream reader) : super(reader) {
+  ReaderStats(Stream? reader) : super(reader) {
     this._bytes = 0;
     this._ops = 0;
     this._errors = 0;
@@ -217,15 +217,15 @@ class ReaderStats extends ReaderProxy with StatsTrackerMixin {
 
   @override
   StreamSubscription listen(
-    void Function(dynamic event) onData, {
-    Function onError,
-    void Function() onDone,
-    bool cancelOnError,
+    void Function(dynamic event)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
   }) {
     return super.listen(
       (event) {
         this.op(event.length);
-        onData(event);
+        onData!(event);
       },
       onError: onError,
       onDone: onDone,
@@ -235,7 +235,7 @@ class ReaderStats extends ReaderProxy with StatsTrackerMixin {
 }
 
 class WriterStats extends WriterProxy with StatsTrackerMixin {
-  WriterStats(StreamSink writer) : super(writer) {
+  WriterStats(StreamSink? writer) : super(writer) {
     this._bytes = 0;
     this._ops = 0;
     this._errors = 0;

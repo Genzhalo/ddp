@@ -9,8 +9,8 @@ void main() {
 
   final client = DdpClient('DdpClientTest', 'ws://localhost:3000/websocket', 'http://localhost');
   test('DdpClientTest', ()  async {
-   
-    await client.connect();
+
+    client.connect();
     await Future.delayed(Duration(minutes: 2));
   }, timeout: Timeout(Duration(minutes: 2)));
 }

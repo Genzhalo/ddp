@@ -24,47 +24,47 @@ abstract class StatusNotifier {
 
 class DdpClient implements ConnectionNotifier, StatusNotifier {
   String _name;
-  Duration heartbeatInterval;
-  Duration heartbeatTimeout;
-  Duration reconnectInterval;
+  late Duration heartbeatInterval;
+  late Duration heartbeatTimeout;
+  late Duration reconnectInterval;
 
-  WriterStats _writeSocketStats;
-  WriterStats _writeStats;
-  WriterLogger _writeLog;
-  ReaderStats _readSocketStats;
-  ReaderStats _readStats;
-  ReaderLogger _readLog;
+  WriterStats? _writeSocketStats;
+  late WriterStats _writeStats;
+  WriterLogger? _writeLog;
+  ReaderStats? _readSocketStats;
+  late ReaderStats _readStats;
+  ReaderLogger? _readLog;
 
-  int _reconnects;
-  int _pingsIn;
-  int _pingsOut;
+  int _reconnects = 0;
+  int _pingsIn = 0;
+  int _pingsOut = 0;
 
-  String _session;
-  String _version;
-  String _serverId;
-  WebSocket _ws;
-  String _url;
-  String _origin;
+  String? _session;
+  String? _version;
+  String? _serverId;
+  WebSocket? _ws;
+  late String _url;
+  String? _origin;
 
 //  Stream _inbox;
 //  Stream _errors;
-  Timer _pingTimer;
+  Timer? _pingTimer;
 
-  Map<String, List<_PingTracker>> _pings;
-  Map<String, Call> _calls;
-  Map<String, Call> _subs;
-  Map<String, Call> _unsubs;
+  late Map<String?, List<_PingTracker>> _pings;
+  late Map<String?, Call> _calls;
+  late Map<String?, Call> _subs;
+  late Map<String?, Call> _unsubs;
 
-  Map<String, Collection> _collections;
-  ConnectStatus _connectionStatus;
-  Timer _reconnectTimer;
+  late Map<String?, Collection> _collections;
+  ConnectStatus? _connectionStatus;
+  Timer? _reconnectTimer;
 
-  List<StatusListener> _statusListeners;
-  List<ConnectionListener> _connectionListener;
+  late List<StatusListener> _statusListeners;
+  late List<ConnectionListener> _connectionListener;
 
-  _IdManager _idManager;
+  late _IdManager _idManager;
 
-  Map<String, _MessageHandler> _messageHandlers;
+  late Map<String, _MessageHandler> _messageHandlers;
 
   DdpClient(this._name, String url, String origin) {
     this.heartbeatInterval = const Duration(minutes: 1);
@@ -103,9 +103,9 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     print('[DdpClient - ${_name}] $msg');
   }
 
-  String get session => _session;
+  String? get session => _session;
 
-  String get version => _version;
+  String? get version => _version;
 
   @override
   void addConnectionListener(ConnectionListener listener) {
@@ -130,14 +130,14 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     this._statusListeners.forEach((l) => l(status));
   }
 
-  ConnectStatus get connectStatus  => _connectionStatus;
+  ConnectStatus? get connectStatus  => _connectionStatus;
 
 
   void connect() {
     this._status(ConnectStatus.dialing);
     WebSocket.connect(this._url).then((connection) {
       final ws = connection;
-      this._start(ws, Message.connect());
+      this._start(ws, Message.connect() as _Connect);
     }).catchError((error) {
       this.close();
       this._reconnectLater();
@@ -146,7 +146,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
 
   void reconnect() {
     if (this._reconnectTimer != null) {
-      this._reconnectTimer.cancel();
+      this._reconnectTimer!.cancel();
       this._reconnectTimer = null;
     }
     this.close();
@@ -233,12 +233,12 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
 
   void close() {
     if (this._pingTimer != null) {
-      this._pingTimer.cancel();
+      this._pingTimer!.cancel();
       this._pingTimer = null;
     }
 
     if (this._ws != null) {
-      this._ws.close(WebSocketStatus.normalClosure);
+      this._ws!.close(WebSocketStatus.normalClosure);
       this._ws = null;
     }
 
@@ -247,9 +247,9 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
   }
 
   void resetStats() {
-    this._readSocketStats.reset();
+    this._readSocketStats!.reset();
     this._readStats.reset();
-    this._writeSocketStats.reset();
+    this._writeSocketStats!.reset();
     this._writeStats.reset();
     this._reconnects = 0;
     this._pingsIn = 0;
@@ -258,26 +258,26 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
 
   ClientStats stats() {
     return ClientStats()
-      ..reads = this._readSocketStats.snapshot()
+      ..reads = this._readSocketStats!.snapshot()
       ..totalReads = this._readStats.snapshot()
-      ..writes = this._writeSocketStats.snapshot()
+      ..writes = this._writeSocketStats!.snapshot()
       ..totalWrites = this._writeStats.snapshot()
       ..reconnects = this._reconnects
       ..pingsSent = this._pingsOut
       ..pingsRecv = this._pingsIn;
   }
 
-  bool socketLogActive() {
-    return this._writeLog.active;
+  bool? socketLogActive() {
+    return this._writeLog!.active;
   }
 
   void setSocketLogActive(bool active) {
     assert(active != null);
-    this._writeLog.active = active;
-    this._readLog.active = active;
+    this._writeLog!.active = active;
+    this._readLog!.active = active;
   }
 
-  Collection collectionByName(String name) {
+  Collection? collectionByName(String? name) {
     if (!this._collections.containsKey(name)) {
       final collection = Collection.key(name);
       this._collections[name] = collection;
@@ -299,10 +299,10 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     this._initMessageHandlers();
     this._ws = ws;
 
-    this._writeLog.setWriter(ws);
+    this._writeLog!.setWriter(ws);
     this._writeSocketStats = WriterStats(this._writeLog);
     this._writeStats.setWriter(this._writeSocketStats);
-    this._readLog.setReader(ws);
+    this._readLog!.setReader(ws);
     this._readSocketStats = ReaderStats(this._readLog);
     this._readStats.setReader(this._readSocketStats);
 
@@ -326,7 +326,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     });
   }
 
-  void pingPong(String id, Duration timeout, Function(Error) handler) {
+  void pingPong(String id, Duration timeout, Function(Error?) handler) {
     this.send(Message.ping(id).toJson());
     this._pingsOut++;
     if (!this._pings.containsKey(id)) {
@@ -338,7 +338,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
       .._timer = Timer(timeout, () {
         handler(ArgumentError('ping timeout'));
       });
-    this._pings[id].add(pingTracker);
+    this._pings[id]!.add(pingTracker);
   }
 
   void _initMessageHandlers() {
@@ -347,7 +347,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
       this._status(ConnectStatus.connected);
       this._collections.values.forEach((c) => c._init());
       this._version = '1';
-      this._session = msg['session'] as String;
+      this._session = msg['session'] as String?;
       this._pingTimer = Timer.periodic(this.heartbeatInterval, (Timer timer) {
         this.ping();
       });
@@ -362,16 +362,16 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
       this._pingsIn++;
     };
     this._messageHandlers['pong'] = (msg) {
-      var key = '';
+      String? key = '';
       if (msg.containsKey('id')) {
-        key = msg['id'] as String;
+        key = msg['id'] as String?;
       }
       if (this._pings.containsKey(key)) {
-        final pings = this._pings[key];
+        final pings = this._pings[key]!;
         if (pings.isNotEmpty) {
           final ping = pings[0];
           final newPings = pings.sublist(1);
-          if (key.isEmpty || pings.isNotEmpty) {
+          if (key!.isEmpty || pings.isNotEmpty) {
             this._pings[key] = newPings;
           }
           ping._timer.cancel();
@@ -381,7 +381,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     };
     this._messageHandlers['nosub'] = (msg) {
       if (msg.containsKey('id')) {
-        final id = msg['id'] as String;
+        final id = msg['id'] as String?;
         final runningSub = this._subs[id];
         if (runningSub != null) {
           final e = msg['error'];
@@ -403,22 +403,22 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
         final subs = msg['subs'] as List<dynamic>;
         subs.forEach((sub) {
           if (this._subs.containsKey(sub)) {
-            this._subs[sub].done();
+            this._subs[sub]!.done();
             this._subs.remove(sub);
           }
         });
       }
     };
     this._messageHandlers['added'] =
-        (msg) => this._collectionBy(msg).added(msg);
+        (msg) => this._collectionBy(msg)!.added(msg);
     this._messageHandlers['changed'] =
-        (msg) => this._collectionBy(msg).changed(msg);
+        (msg) => this._collectionBy(msg)!.changed(msg);
     this._messageHandlers['removed'] =
-        (msg) => this._collectionBy(msg).removed(msg);
+        (msg) => this._collectionBy(msg)!.removed(msg);
     this._messageHandlers['addedBefore'] =
-        (msg) => this._collectionBy(msg)._addedBefore(msg);
+        (msg) => this._collectionBy(msg)!._addedBefore(msg);
     this._messageHandlers['movedBefore'] =
-        (msg) => this._collectionBy(msg)._movedBefore(msg);
+        (msg) => this._collectionBy(msg)!._movedBefore(msg);
     this._messageHandlers['result'] = (msg) {
       if (msg.containsKey('id')) {
         final id = msg['id'];
@@ -445,7 +445,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
       if (message.containsKey('msg')) {
         final mtype = message['msg'];
         if (this._messageHandlers.containsKey(mtype)) {
-          this._messageHandlers[mtype](message);
+          this._messageHandlers[mtype]!(message);
         } else {
           this._log('Server sent unexpected message ${message}');
         }
@@ -460,11 +460,11 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
         this._log('Server sent message without `msg` field ${message}');
       }
     }, onDone: (){
-      _reconnectLater(); 
+      _reconnectLater();
     });
   }
 
-  Collection _collectionBy(Map<String, dynamic> msg) {
+  Collection? _collectionBy(Map<String, dynamic> msg) {
     if (msg.containsKey('collection')) {
       final name = msg['collection'];
       if (name.runtimeType == String) {

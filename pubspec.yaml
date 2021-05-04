@@ -4,7 +4,7 @@ version: 0.0.14
 author: haoguo <bard.guo@gmail.com>
 homepage: https://github.com/haoguo/ddp
 environment:
-  sdk: ">=1.8.0 <3.0.0"
+  sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
   tuple: ^1.0.3
