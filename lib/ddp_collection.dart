@@ -1,10 +1,10 @@
 part of ddp;
 
 typedef void UpdateListener(
-    String? collection,
+    String collection,
     String operation,
-    String? id,
-    Map<String?, dynamic>? doc,
+    String id,
+    Map<String, dynamic>? doc,
 );
 
 Tuple2<String?, Map<String?, dynamic>?> _parseUpdate(Map<String, dynamic> update) {
@@ -30,7 +30,7 @@ Tuple2<String?, Map<String?, dynamic>?> _parseUpdate(Map<String, dynamic> update
 }
 
 abstract class Collection {
-  Map<String?, dynamic>? findOne(String id);
+  Map<String, dynamic>? findOne(String id);
 
   Map<String?, Map<String?, dynamic>?> findAll();
 
@@ -54,17 +54,17 @@ abstract class Collection {
 
   factory Collection.mock() => _MockCache();
 
-  factory Collection.key(String? name) => KeyCache(name, {}, []);
+  factory Collection.key(String name) => KeyCache(name, {}, []);
 }
 
 class KeyCache implements Collection {
   String? name;
-  Map<String?, Map<String?, dynamic>?> _items;
+  Map<String, Map<String, dynamic>> _items;
   List<UpdateListener> _listeners;
 
   KeyCache(this.name, this._items, this._listeners);
 
-  void _notify(String operation, String? id, Map<String?, dynamic>? doc) {
+  void _notify(String operation, String id, Map<String, dynamic>? doc) {
     this._listeners.forEach((listener) {
       listener(this.name, operation, id, doc);
     });
@@ -125,10 +125,10 @@ class KeyCache implements Collection {
       this._listeners.add(listener);
 
   @override
-  Map<String?, Map<String?, dynamic>?> findAll() => this._items;
+  Map<String, Map<String, dynamic>?> findAll() => this._items;
 
   @override
-  Map<String?, dynamic>? findOne(String id) => this._items[id];
+  Map<String, dynamic>? findOne(String id) => this._items[id];
 }
 
 class _MockCache implements Collection {
