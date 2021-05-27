@@ -7,11 +7,11 @@ typedef void UpdateListener(
     Map<String, dynamic>? doc,
 );
 
-Tuple2<String?, Map<String?, dynamic>?> _parseUpdate(Map<String, dynamic> update) {
+Tuple2<String, Map<String, dynamic>?> _parseUpdate(Map<String, dynamic> update) {
   if (update.containsKey('id')) {
     final id = update['id'];
     if (id.runtimeType == String) {
-      var updates = Map<String?, dynamic>();
+      var updates = Map<String, dynamic>();
       if (update.containsKey('fields')) {
         if (update['fields'] is Map) {
           updates.addAll(update['fields']);
@@ -58,7 +58,7 @@ abstract class Collection {
 }
 
 class KeyCache implements Collection {
-  String? name;
+  String name;
   Map<String, Map<String, dynamic>> _items;
   List<UpdateListener> _listeners;
 
@@ -74,8 +74,8 @@ class KeyCache implements Collection {
   void added(Map<String, dynamic> msg) {
     final pair = _parseUpdate(msg);
     if (pair.item2 != null) {
-      this._items[pair.item1] = pair.item2;
-      this._notify('create', pair.item1, pair.item2);
+      this._items[pair.item1] = pair.item2!;
+      this._notify('create', pair.item1, pair.item2!);
     }
   }
 
@@ -89,8 +89,8 @@ class KeyCache implements Collection {
       if (this._items.containsKey(pair.item1)) {
         final item = this._items[pair.item1];
         pair.item2!.forEach((key, value) => item![key] = value);
-        this._items[pair.item1] = item;
-        this._notify('update', pair.item1, pair.item2);
+        this._items[pair.item1] = item!;
+        this._notify('update', pair.item1, pair.item2!);
       }
     }
   }
@@ -104,7 +104,7 @@ class KeyCache implements Collection {
   @override
   void removed(Map<String, dynamic> msg) {
     final pair = _parseUpdate(msg);
-    if (pair.item1!.isNotEmpty) {
+    if (pair.item1.isNotEmpty) {
       this._items.remove(pair.item1);
       this._notify('remove', pair.item1, null);
     }

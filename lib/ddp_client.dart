@@ -277,7 +277,7 @@ class DdpClient implements ConnectionNotifier, StatusNotifier {
     this._readLog!.active = active;
   }
 
-  Collection? collectionByName(String? name) {
+  Collection? collectionByName(String name) {
     if (!this._collections.containsKey(name)) {
       final collection = Collection.key(name);
       this._collections[name] = collection;
